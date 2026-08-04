@@ -6,6 +6,8 @@ import numpy as np
 base_dir = Path(__file__).resolve().parent
 data_dir = base_dir / "data"
 raw_data_dir = data_dir / "raw"
+processed_data_dir = data_dir / "processed"
+models_dir = base_dir / "models"
 
 diabetic_data_path = raw_data_dir / "diabetic_data.csv"
 ids_mapping_path = raw_data_dir / "IDS_mapping.csv"
@@ -274,6 +276,77 @@ def show_data_summary(data):
     print(missing_percentage.head(10))
 
 
+def save_data_splits(
+    x_train,
+    y_train,
+    x_validation,
+    y_validation,
+    x_test,
+    y_test,
+):
+    """
+    save training, validation, and testing data
+    into separate csv files.
+    """
+    processed_data_dir.mkdir(
+        parents=True,
+        exist_ok=True,
+    )
+
+    # reset the indexes before combining x and y
+    train_data = x_train.reset_index(
+        drop=True
+    ).copy()
+
+    validation_data = x_validation.reset_index(
+        drop=True
+    ).copy()
+
+    test_data = x_test.reset_index(
+        drop=True
+    ).copy()
+
+    # add the target column
+    train_data["readmitted_binary"] = (
+        y_train.reset_index(drop=True)
+    )
+
+    validation_data["readmitted_binary"] = (
+        y_validation.reset_index(drop=True)
+    )
+
+    test_data["readmitted_binary"] = (
+        y_test.reset_index(drop=True)
+    )
+
+    # save each split
+    train_data.to_csv(
+        processed_data_dir / "train.csv",
+        index=False,
+    )
+
+    validation_data.to_csv(
+        processed_data_dir / "validation.csv",
+        index=False,
+    )
+
+    test_data.to_csv(
+        processed_data_dir / "test.csv",
+        index=False,
+    )
+
+    print("\ndata splits saved successfully")
+
+    print("\ntraining file")
+    print(processed_data_dir / "train.csv")
+
+    print("\nvalidation file")
+    print(processed_data_dir / "validation.csv")
+
+    print("\ntesting file")
+    print(processed_data_dir / "test.csv")
+
+
 def main():
      # load both datasets
     diabetes_data, mapping_data = load_data()
@@ -347,6 +420,15 @@ def main():
         x_test,
         y_test,
         groups_test,
+    )
+
+    save_data_splits(
+        x_train,
+        y_train,
+        x_validation,
+        y_validation,
+        x_test,
+        y_test,
     )
 
 if __name__ == "__main__":
