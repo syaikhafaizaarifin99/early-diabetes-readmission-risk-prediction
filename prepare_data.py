@@ -1,4 +1,5 @@
 from pathlib import Path
+from sklearn.model_selection import GroupShuffleSplit
 import pandas as pd
 import numpy as np
 
@@ -99,6 +100,146 @@ def select_features(data):
     )
 
 
+def split_data(x, y, groups):
+    """
+    split the dataset by patient (groups) into training, validation, and testing data.
+    
+    """
+    # split the  data into training and temporary data
+    first_splitter = GroupShuffleSplit(
+        n_splits=1,
+        test_size=0.30,
+    random_state=42,
+    )
+
+    train_index, temporary_index = next(
+        first_splitter.split(
+            x,
+            y,
+            groups=groups,
+        )
+    )
+
+    x_train = x.iloc[train_index].copy()
+    y_train = y.iloc[train_index].copy()
+    groups_train = groups.iloc[train_index].copy()
+
+    x_temporary = x.iloc[temporary_index].copy()
+    y_temporary = y.iloc[temporary_index].copy()
+    groups_temporary = groups.iloc[temporary_index].copy()
+
+    # split the temporary data into validation and testing data
+    second_splitter = GroupShuffleSplit(
+        n_splits=1,
+        test_size=0.50,
+        random_state=42,
+    )
+
+    validation_index, test_index = next(
+        second_splitter.split(
+            x_temporary,
+            y_temporary,
+            groups=groups_temporary,
+        )
+    )
+
+    x_validation = x_temporary.iloc[validation_index].copy()
+    y_validation = y_temporary.iloc[validation_index].copy()
+    groups_validation = groups_temporary.iloc[
+        validation_index
+    ].copy()
+
+    x_test = x_temporary.iloc[test_index].copy()
+    y_test = y_temporary.iloc[test_index].copy()
+    groups_test = groups_temporary.iloc[test_index].copy()
+
+    return (
+        x_train,
+        y_train,
+        groups_train,
+        x_validation,
+        y_validation,
+        groups_validation,
+        x_test,
+        y_test,
+        groups_test,
+    )
+
+
+def show_split_summary(
+    x_train,
+    y_train,
+    groups_train,
+    x_validation,
+    y_validation,
+    groups_validation,
+    x_test,
+    y_test,
+    groups_test,
+):
+    """
+    display the data split summary and check patient overlap.
+    """
+
+    print("\ntraining data shape")
+    print(x_train.shape)
+
+    print("\nvalidation data shape")
+    print(x_validation.shape)
+
+    print("\ntesting data shape")
+    print(x_test.shape)
+
+    print("\ntraining target percentage")
+    print(
+        y_train
+        .value_counts(normalize=True)
+        .mul(100)
+        .round(2)
+    )
+
+    print("\nvalidation target percentage")
+    print(
+        y_validation
+        .value_counts(normalize=True)
+        .mul(100)
+        .round(2)
+    )
+
+    print("\ntesting target percentage")
+    print(
+        y_test
+        .value_counts(normalize=True)
+        .mul(100)
+        .round(2)
+    )
+
+    train_patients = set(groups_train)
+    validation_patients = set(groups_validation)
+    test_patients = set(groups_test)
+
+    train_validation_overlap = (
+        train_patients.intersection(validation_patients)
+    )
+
+    train_test_overlap = (
+        train_patients.intersection(test_patients)
+    )
+
+    validation_test_overlap = (
+        validation_patients.intersection(test_patients)
+    )
+
+    print("\npatient overlap between training and validation")
+    print(len(train_validation_overlap))
+
+    print("\npatient overlap between training and testing")
+    print(len(train_test_overlap))
+
+    print("\npatient overlap between validation and testing")
+    print(len(validation_test_overlap))
+
+
 def show_data_summary(data):
     """
     display summary statistics of the dataset.
@@ -160,8 +301,7 @@ def main():
         y,
         groups,
         numerical_columns,
-        categorical_columns,
-    ) = select_features(diabetes_data)
+        categorical_columns ) = select_features(diabetes_data)
 
     print("\nfeature data shape")
     print(x.shape)
@@ -181,6 +321,33 @@ def main():
     print("\nfirst five feature rows")
     print(x.head())
 
+    (
+        x_train,
+        y_train,
+        groups_train,
+        x_validation,
+        y_validation,
+        groups_validation,
+        x_test,
+        y_test,
+        groups_test,
+    ) = split_data(
+        x,
+        y,
+        groups,
+    )
+
+    show_split_summary(
+        x_train,
+        y_train,
+        groups_train,
+        x_validation,
+        y_validation,
+        groups_validation,
+        x_test,
+        y_test,
+        groups_test,
+    )
 
 if __name__ == "__main__":
     main()
