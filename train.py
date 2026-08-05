@@ -23,12 +23,9 @@ from model import ReadmissionModel as readmission_model
 
 base_dir = Path(__file__).resolve().parent
 data_dir = base_dir / "data"
-raw_data_dir = data_dir / "raw"
+
 processed_data_dir = data_dir / "processed"
 models_dir = base_dir / "models"
-
-diabetic_data_path = raw_data_dir / "diabetic_data.csv"
-ids_mapping_path = raw_data_dir / "IDS_mapping.csv"
 
 train_data_path = processed_data_dir / "train.csv"
 validation_data_path = processed_data_dir / "validation.csv"
