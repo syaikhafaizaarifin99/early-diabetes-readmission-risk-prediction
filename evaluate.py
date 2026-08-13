@@ -65,10 +65,10 @@ def separate_features_and_target(data):
     """
 
     x_test = data.drop(
-        columns=["target"]
+        columns=["readmitted_binary"]
     ).copy()
 
-    y_test = data["target"].to_numpy(
+    y_test = data["readmitted_binary"].to_numpy(
         dtype=np.float32
     )
 
