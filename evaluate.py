@@ -371,7 +371,7 @@ def main():
         evaluate_predictions(
             targets=test_targets,
             probabilities=test_probabilities,
-            threshold=0.5,
+            threshold=0.50,
         )
     )
 
