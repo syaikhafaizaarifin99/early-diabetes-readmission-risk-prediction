@@ -366,7 +366,7 @@ def main():
         device,
     )
 
-    # calculate evaluation results
+    # threshold confirmed as the best f1 on validation set (see tune_threshold.py)
     test_predictions = (
         evaluate_predictions(
             targets=test_targets,
