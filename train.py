@@ -58,6 +58,9 @@ categorical_columns = [
     "insulin",
     "change",
     "diabetesMed",
+    "diag_1_group",
+    "diag_2_group",
+    "diag_3_group",
 ]
 
 

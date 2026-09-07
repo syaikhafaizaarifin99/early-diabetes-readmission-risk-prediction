@@ -29,12 +29,87 @@ def load_data():
     return diabetic_data, mapping_data
 
 
+def group_diagnosis(code):
+    """
+    group icd-9 diagnosis codes into broader categories.
+    """
+
+    if pd.isna(code):
+        return "missing"
+
+    code = str(code).strip()
+
+    # diabetes codes
+    if code.startswith("250"):
+        return "diabetes"
+
+    # external and supplementary codes
+    if code.lower().startswith(("e", "v")):
+        return "other"
+
+    try:
+        code_number = float(code)
+    except ValueError:
+        return "other"
+
+    if (
+        390 <= code_number <= 459
+        or int(code_number) == 785
+    ):
+        return "circulatory"
+
+    if (
+        460 <= code_number <= 519
+        or int(code_number) == 786
+    ):
+        return "respiratory"
+
+    if (
+        520 <= code_number <= 579
+        or int(code_number) == 787
+    ):
+        return "digestive"
+
+    if 800 <= code_number <= 999:
+        return "injury"
+
+    if 710 <= code_number <= 739:
+        return "musculoskeletal"
+
+    if (
+        580 <= code_number <= 629
+        or int(code_number) == 788
+    ):
+        return "genitourinary"
+
+    if 140 <= code_number <= 239:
+        return "neoplasms"
+
+    return "other"
+
+
 def clean_data(data):
     """
     Clean the diabetic data by handling missing values and create binary target.
     
     """
+
+    data = data.copy()
     data = data.replace("?", np.nan)
+
+    # create diagnosis groups
+    data["diag_1_group"] = (
+        data["diag_1"].apply(group_diagnosis)
+    )
+
+    data["diag_2_group"] = (
+        data["diag_2"].apply(group_diagnosis)
+    )
+
+    data["diag_3_group"] = (
+        data["diag_3"].apply(group_diagnosis)
+    )
+
 
     # create binary target variable: 1 (True) if readmitted within 30 days, else 0 (False)
     data['readmitted_binary'] = (data['readmitted'] == '<30').astype(int)
@@ -85,6 +160,9 @@ def select_features(data):
         "insulin",
         "change",
         "diabetesMed",
+        "diag_1_group",
+        "diag_2_group",
+        "diag_3_group",
     ]
 
     feature_columns = numerical_columns + categorical_columns
